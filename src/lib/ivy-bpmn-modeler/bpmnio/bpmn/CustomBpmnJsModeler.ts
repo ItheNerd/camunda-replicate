@@ -1,4 +1,5 @@
 import "@/styles/bpmn-css/bpmn-font/css/bpmn-embedded.css";
+import "@/styles/bpmn-css/bpmn-js-token-simulation.css";
 import "@/styles/bpmn-css/diagram-js.css";
 import "@/styles/diagram-js-minimap.css";
 import {
@@ -6,11 +7,12 @@ import {
   BpmnPropertiesProviderModule,
   CamundaPlatformPropertiesProviderModule,
 } from "bpmn-js-properties-panel";
+import TokenSimulationModule from "bpmn-js-token-simulation";
 import Modeler from "bpmn-js/lib/Modeler";
 import camundaPlatformBehaviors from "camunda-bpmn-js-behaviors/lib/camunda-platform";
 import camundaModdleDescriptor from "camunda-bpmn-moddle/resources/camunda.json";
 import deepmerge from "deepmerge";
-import minimapModule from "diagram-js-minimap";
+import Minimap from "diagram-js-minimap";
 import GlobalEventListenerUtil, {
   EventCallback,
 } from "../GlobalEventListenerUtil";
@@ -67,8 +69,9 @@ class CustomBpmnJsModeler extends Modeler {
               __init__: ["globalEventListenerUtil"],
               globalEventListenerUtil: ["type", GlobalEventListenerUtil],
             },
-            minimapModule,
+            Minimap,
             camundaPlatformBehaviors,
+            TokenSimulationModule,
           ],
           moddleExtensions: {
             camunda: camundaModdleDescriptor,
@@ -118,6 +121,28 @@ class CustomBpmnJsModeler extends Modeler {
       this.saveSVG(),
     ]);
     return { xml, svg };
+  }
+
+  public async exportXml(): Promise<string> {
+    try {
+      const { xml } = await this.saveXML({ format: true, preamble: false });
+      console.log("BPMN diagram saved successfully:", xml);
+      return xml;
+    } catch (error) {
+      console.error("Error exporting BPMN diagram:", error);
+      throw error;
+    }
+  }
+
+  public async exportSvg(): Promise<string> {
+    try {
+      const { svg } = await this.saveSVG();
+      console.log("SVG diagram saved successfully:", svg);
+      return svg;
+    } catch (error) {
+      console.error("Error exporting SVG diagram:", error);
+      throw error;
+    }
   }
 
   /**
@@ -307,6 +332,24 @@ class CustomBpmnJsModeler extends Modeler {
    */
   public resetZoom(): void {
     this.get("zoomScroll").reset();
+  }
+  /**
+   * Toggles the minimap module.
+   */
+  public toggleMinimap(): void {
+    const minimap = this.getInjector().get("minimap");
+    if (minimap && typeof minimap.open === "function") {
+      minimap.toggle();
+    }
+  }
+  /**
+   * Toggles the token simulation.
+   */
+  public toggleTokenSimulation(): void {
+    const tokenSimulationModule = this.getInjector().get("tokenSimulation");
+    if (tokenSimulationModule) {
+      tokenSimulationModule.toggle();
+    }
   }
 }
 

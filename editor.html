@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@bpmn-io/form-js@1.7.1/dist/assets/form-js.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@bpmn-io/form-js@1.7.1/dist/assets/form-js-editor.css" />
+
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+      }
+
+      #form {
+        max-width: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="form"></div>
+    <script type="application/form-schema">
+      {
+        "exporter": {
+          "name": "form-js",
+          "version": "0.1.0"
+        },
+        "type": "default"
+      }
+    </script>
+    <script src="https://unpkg.com/@bpmn-io/form-js@1.7.1/dist/form-editor.umd.js"></script>
+
+    <script>
+      const schema = JSON.parse(
+        document.querySelector('[type="application/form-schema"]').textContent
+      );
+
+      const container = document.querySelector("#form");
+
+      FormEditor.createFormEditor({
+        container,
+        schema,
+      });
+    </script>
+  </body>
+</html>

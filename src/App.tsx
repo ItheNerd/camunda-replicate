@@ -2,6 +2,7 @@ import {
   BpmnModeler,
   ContentSavedReason,
   CustomBpmnJsModeler,
+  CustomDmnJsModeler,
   Event,
   isBpmnIoEvent,
   isContentSavedEvent,
@@ -15,7 +16,7 @@ import "./App.css";
 import { Button } from "./components/ui/button";
 
 const App: React.FC = () => {
-  const modelerRef = useRef<CustomBpmnJsModeler>();
+  const modelerRef = useRef<CustomDmnJsModeler | CustomBpmnJsModeler>();
 
   const [xml, setXml] = useState<string>(BPMN);
   const [_, setSvg] = useState<string | undefined>();
@@ -34,15 +35,68 @@ const App: React.FC = () => {
     []
   );
 
-  const onSaveClicked = useCallback(async () => {
+  const onSaveSvgClicked = useCallback(async () => {
     if (!modelerRef.current) {
-      // Should actually never happen, but required for type safety
+      console.error("Modeler is not initialized");
       return;
     }
 
-    console.log("Saving model...");
-    const result = await modelerRef.current.save();
-    console.log("Saved model!", result.xml, result.svg);
+    try {
+      // Check if modelerRef.current is an instance of CustomBpmnJsModeler
+      if (modelerRef.current instanceof CustomBpmnJsModeler) {
+        const diagramData = await modelerRef.current.exportSvg();
+        const blob = new Blob([diagramData], { type: "image/svg+xml" }); // Convert diagram data to Blob
+        const url = window.URL.createObjectURL(blob); // Create a download URL for the Blob
+        const a = document.createElement("a"); // Create a link element
+        a.href = url;
+        a.download = "diagram.svg"; // Set the filename for download as SVG
+        document.body.appendChild(a); // Append link to body
+        a.click(); // Simulate click on the link
+        window.URL.revokeObjectURL(url); // Release the object URL
+        document.body.removeChild(a); // Remove link from body
+        console.log("SVG diagram exported successfully!");
+      } else {
+        console.error("Modeler does not support exporting SVG");
+      }
+    } catch (error) {
+      console.error("Error exporting SVG diagram:", error);
+    }
+  }, []);
+
+  const onSaveXmlClicked = useCallback(async () => {
+    if (!modelerRef.current) {
+      console.error("Modeler is not initialized");
+      return;
+    }
+
+    try {
+      const diagramData = await modelerRef.current.exportXml();
+      const blob = new Blob([diagramData], { type: "application/xml" }); // Convert diagram data to Blob
+      const url = window.URL.createObjectURL(blob); // Create a download URL for the Blob
+      const a = document.createElement("a"); // Create a link element
+      a.href = url;
+      if (modelerRef.current instanceof CustomBpmnJsModeler) {
+        a.download = "diagram.bpmn";
+      } else {
+        a.download = "diagram.dmn";
+      }
+
+      document.body.appendChild(a); // Append link to body
+      a.click(); // Simulate click on the link
+      window.URL.revokeObjectURL(url); // Release the object URL
+      document.body.removeChild(a); // Remove link from body
+      console.log("BPMN diagram exported successfully!");
+    } catch (error) {
+      console.error("Error exporting BPMN diagram:", error);
+    }
+  }, []);
+
+  const toggleMinimap = useCallback(() => {
+    if (!modelerRef.current) {
+      console.error("Modeler is not initialized");
+      return;
+    }
+    modelerRef.current.toggleMinimap();
   }, []);
 
   const onEvent = useCallback(
@@ -145,22 +199,40 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen">
-      <Button
-        onClick={onSaveClicked}
+      <div
         style={{
           position: "absolute",
           zIndex: 100,
           top: 25,
-          left: "calc(50% - 100px)",
-        }}>
-        Save Diagram
-      </Button>
-
+          left: "calc(50vw - 125px)",
+        }}
+        className="flex gap-2">
+        <Button
+          variant={"outline"}
+          className="bg-gray-100"
+          onClick={onSaveXmlClicked}
+          aria-label="xml">
+          Save Diagram
+        </Button>
+        <Button
+          variant={"outline"}
+          className="bg-gray-100"
+          onClick={onSaveSvgClicked}
+          aria-label="xml">
+          Save SVG
+        </Button>
+        <Button
+          variant={"outline"}
+          className="bg-gray-100"
+          onClick={toggleMinimap}>
+          Open Minimap
+        </Button>
+      </div>
       <BpmnModeler
         xml={xml}
         onEvent={onEvent}
         xmlTabOptions={xmlTabOptions}
-        modelerTabOptions={modelerTabOptions}
+        modelerTabOptions={modelerTabOptions as any}
       />
     </div>
   );

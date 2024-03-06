@@ -79,6 +79,17 @@ export interface CustomDmnJsModelerOptions {
   dmnJsOptions?: any;
 }
 
+interface Injector {
+  /**
+   * Returns a named component.
+   *
+   * @param name The name
+   * @param strict If an error should be thrown if the component does not exist. If false, null
+   *     will be returned.
+   */
+  get: (name: string, strict?: boolean) => any;
+}
+
 class CustomDmnJsModeler extends Modeler {
   /**
    * Creates a new instance of the bpmn-js modeler.
@@ -133,6 +144,7 @@ class CustomDmnJsModeler extends Modeler {
               additionalModules: [
                 DmnPropertiesPanelModule,
                 DmnPropertiesProviderModule,
+
                 CamundaPropertiesProviderModule,
               ],
             },
@@ -143,6 +155,7 @@ class CustomDmnJsModeler extends Modeler {
               additionalModules: [
                 DmnPropertiesPanelModule,
                 DmnPropertiesProviderModule,
+
                 CamundaPropertiesProviderModule,
               ],
             },
@@ -153,6 +166,7 @@ class CustomDmnJsModeler extends Modeler {
               additionalModules: [
                 DmnPropertiesPanelModule,
                 DmnPropertiesProviderModule,
+
                 CamundaPropertiesProviderModule,
               ],
             },
@@ -160,6 +174,13 @@ class CustomDmnJsModeler extends Modeler {
         : {},
     ]);
     super(mergedOptions);
+  }
+
+  /**
+   * Returns the injector.
+   */
+  getInjector(): Injector {
+    return this.get("injector");
   }
 
   /**
@@ -172,6 +193,24 @@ class CustomDmnJsModeler extends Modeler {
           reject(err);
         } else {
           resolve({ xml });
+        }
+      });
+    });
+  }
+
+  /**
+   * Save diagram contents and print them to the console.
+   */
+  public async exportXml(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.saveXML({ format: true }, (err, xml) => {
+        if (err) {
+          console.error("could not save DMN 1.1 diagram", err);
+          reject(err);
+        } else {
+          alert("Diagram exported. Check the developer tools!");
+          console.log("DIAGRAM", xml);
+          resolve(xml);
         }
       });
     });
@@ -275,6 +314,15 @@ class CustomDmnJsModeler extends Modeler {
    */
   public unregisterGlobalEventListener(listener: EventCallback): void {
     this.getActiveViewer()?.get("globalEventListenerUtil").off(listener);
+  }
+  /**
+   * Toggles the minimap module.
+   */
+  public toggleMinimap(): void {
+    const minimap = this.getInjector().get("minimap");
+    if (minimap && typeof minimap.open === "function") {
+      minimap.toggle();
+    }
   }
 }
 

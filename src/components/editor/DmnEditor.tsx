@@ -422,7 +422,7 @@ const DmnEditor: React.FC<DmnEditorProps> = (props) => {
     <ResizablePanelGroup
       direction="horizontal"
       className={clsx(!props.active && classes.hidden, className)}>
-      <ResizablePanel>{modelerContainer}</ResizablePanel>
+      <ResizablePanel defaultSize={80}>{modelerContainer}</ResizablePanel>
       <ResizableHandle />
       <ResizablePanel>{propertiesPanelContainer}</ResizablePanel>
     </ResizablePanelGroup>

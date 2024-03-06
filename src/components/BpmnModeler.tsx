@@ -6,7 +6,6 @@ import {
 } from "@/lib/ivy-bpmn-modeler/events/modeler/ContentSavedEvent";
 import { cn } from "@/lib/utils";
 import { makeStyles } from "@mui/styles";
-import { RefEditorInstance } from "@uiw/react-monacoeditor";
 import React, {
   SetStateAction,
   useCallback,
@@ -120,7 +119,7 @@ const BpmnModeler: React.FC<BpmnModelerProps> = (props) => {
 
   const { onEvent, xml, modelerTabOptions, xmlTabOptions, className } = props;
 
-  const monacoRef = useRef<RefEditorInstance>(null);
+  const monacoRef = useRef<any>(null);
   const modelerRef = useRef<CustomBpmnJsModeler>();
 
   const [mode, setMode] = useState<BpmnViewMode>("bpmn");
@@ -128,6 +127,7 @@ const BpmnModeler: React.FC<BpmnModelerProps> = (props) => {
   useEffect(() => {
     if (modelerTabOptions?.disabled && !xmlTabOptions?.disabled) {
       setMode("xml");
+      console.log("mode :", mode);
     }
   }, [modelerTabOptions, xmlTabOptions]);
 
@@ -169,7 +169,7 @@ const BpmnModeler: React.FC<BpmnModelerProps> = (props) => {
         }
         case "xml": {
           if (monacoRef.current) {
-            const saved = (await monacoRef.current?.editor?.getValue()) || "";
+            const saved = (await monacoRef.current?.getValue()) || "";
             onEvent(createContentSavedEvent(saved, undefined, reason));
           }
           break;
@@ -184,6 +184,7 @@ const BpmnModeler: React.FC<BpmnModelerProps> = (props) => {
       if (value !== null && value !== mode) {
         await saveFile(mode, "view.changed");
         setMode(value);
+        console.log({ mode });
       }
     },
     [saveFile, mode]
@@ -202,7 +203,7 @@ const BpmnModeler: React.FC<BpmnModelerProps> = (props) => {
 
   return (
     <div className={cn(classes.root, className)}>
-      {!modelerTabOptions?.disabled && (
+      {!modelerTabOptions?.disabled && mode==="bpmn" && (
         <BpmnEditor
           xml={xml}
           active={mode === "bpmn"}
@@ -249,7 +250,7 @@ const BpmnModeler: React.FC<BpmnModelerProps> = (props) => {
               ),
             },
           ]}
-          onChange={changeMode as unknown as (value: string) => void}
+          onChange={changeMode as unknown as (id: string) => void}
           active={mode}
         />
       )}
